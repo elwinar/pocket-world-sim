@@ -1,11 +1,9 @@
 package main
 
 import (
-	"image"
-	"image/color"
-	"image/jpeg"
+	"flag"
+	"fmt"
 	"log/slog"
-	"math"
 	"math/rand/v2"
 	"os"
 
@@ -13,81 +11,107 @@ import (
 )
 
 func main() {
+	loggerLevel := new(slog.LevelVar)
+	loggerLevel.Set(slog.LevelDebug)
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: loggerLevel,
+	}))
+	slog.SetDefault(logger)
 	slog.Info("pocket-world-sim")
 
-	var seed = NewSeed(rand.Uint64(), rand.Uint64(), 32)
-	var world = NewWorld(seed)
+	var w World
+	flag.Uint64Var(&w.Seed, "seed", 0, "seed for initializing the procedural generation (0 for random)")
+	flag.UintVar(&w.Width, "width", 10, "width of the world map")
+	flag.UintVar(&w.Height, "height", 10, "height of the world map")
+	flag.Func("log", "log level", func(v string) error {
+		return loggerLevel.UnmarshalText([]byte(v))
+	})
+	flag.Parse()
+	slog.Info("world", "seed", w.Seed, "size", fmt.Sprintf("%dx%d", w.Width, w.Height))
 
-	err := jpeg.Encode(os.Stdout, world.Render(), nil)
-	if err != nil {
-		slog.Error("rendering world", "err", err)
-		return
+	if w.Seed == 0 {
+		w.Seed = rand.Uint64()
 	}
 
-}
-
-type Seed struct {
-	Seed1, Seed2 uint64
-	Size         int
-}
-
-func NewSeed(seed1, seed2 uint64, size int) Seed {
-	return Seed{
-		Seed1: seed1,
-		Seed2: seed2,
-		Size:  size,
-	}
-}
-
-func (s Seed) Rand() *rand.Rand {
-	return rand.New(rand.NewPCG(s.Seed1, s.Seed2))
+	w.Generate()
 }
 
 type World struct {
-	Seed Seed
-	mat  []float64
+	Seed          uint64
+	Width, Height uint
+
+	Grid []Tile
 }
 
-func NewWorld(seed Seed) World {
-	rand := seed.Rand()
+func (w *World) Generate() {
+	rng := rand.New(rand.NewPCG(w.Seed, w.Seed))
+	gridSeed := rng.Int64()
 
-	noise := opensimplex.NewNormalized(rand.Int64())
-
-	mat := make([]float64, seed.Size*seed.Size)
-	for x := range seed.Size {
-		for y := range seed.Size {
-			f := noise.Eval2(float64(x), float64(y))
-			mat[x*seed.Size+y] = f
+	w.Grid = make([]Tile, w.Width*w.Height)
+	noise := opensimplex.NewNormalized(gridSeed)
+	scale := 1.0
+	gain := 2.0
+	lacunarity := 0.5
+	octaves := 2
+	for x := range w.Width {
+		for y := range w.Height {
+			nx := float64(x) * scale
+			ny := float64(y) * scale
+			z := FractalBrownianMotion(noise, nx, ny, octaves, gain, lacunarity)
+			w.Grid[w.index(x, y)] = Tile{
+				Biome: PickBiome(z),
+			}
 		}
 	}
-
-	return World{
-		Seed: seed,
-		mat:  mat,
-	}
+	slog.Debug("grid", "v", w.Grid)
 }
 
-func (w World) At(x, y int) float64 {
-	return w.mat[x*int(w.Seed.Size)+y]
+func (w *World) index(x, y uint) uint {
+	return y*w.Width + x
 }
 
-func (w World) Render() image.Image {
-	var grayscale = image.NewGray16(image.Rectangle{
-		Min: image.Point{
-			X: 0,
-			Y: 0,
-		},
-		Max: image.Point{
-			X: w.Seed.Size,
-			Y: w.Seed.Size,
-		},
-	})
-	for x := range w.Seed.Size {
-		for y := range w.Seed.Size {
-			f := w.At(x, y)
-			v := uint16(f * float64(math.MaxUint16))
-			grayscale.SetGray16(x, y, color.Gray16{Y: v})
-		}
+type Tile struct {
+	Biome Biome
+}
+
+//go:generate go tool stringer -type=Biome
+type Biome int
+
+const (
+	Plain Biome = iota
+	Weeds
+)
+
+func PickBiome(z float64) Biome {
+	if z < 0.5 {
+		return Plain
 	}
-	return grayscale
+	return Weeds
+}
+
+// Fractal Brownian Motion for 2D coordinates. https://thebookofshaders.com/13/.
+func FractalBrownianMotion(noise opensimplex.Noise, x, y float64, octaves int, gain, lacunarity float64) float64 {
+	total := 0.0
+	amplitude := 1.0
+	frequency := 1.0
+	maxValue := 0.0 // Used to normalize the final result
+
+	for range octaves {
+		// Evaluate the base noise at the current frequency.
+		// OpenSimplex returns a value between -1.0 and 1.0
+		n := noise.Eval2(x*frequency, y*frequency)
+
+		// Add the noise to our total, scaled by the current amplitude
+		total += n * amplitude
+
+		// Accumulate maximum possible value to normalize later
+		maxValue += amplitude
+
+		// Prepare amplitude and frequency for the next octave
+		amplitude *= gain
+		frequency *= lacunarity
+	}
+
+	// Normalize the result to keep it bounded between 0 and 1.0
+	return total / maxValue
 }
