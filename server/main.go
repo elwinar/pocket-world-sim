@@ -1,39 +1,55 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log/slog"
 	"math/rand/v2"
+	"net/http"
 	"os"
 
 	"github.com/ojrac/opensimplex-go"
 )
 
 func main() {
-	loggerLevel := new(slog.LevelVar)
-	loggerLevel.Set(slog.LevelDebug)
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: loggerLevel,
-	}))
+	logLevel := new(slog.LevelVar)
+	logLevel.Set(slog.LevelDebug)
+	logHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: logLevel,
+	})
+	logger := slog.New(logHandler)
 	slog.SetDefault(logger)
 	slog.Info("pocket-world-sim")
 
-	var w World
-	flag.Uint64Var(&w.Seed, "seed", 0, "seed for initializing the procedural generation (0 for random)")
-	flag.UintVar(&w.Width, "width", 10, "width of the world map")
-	flag.UintVar(&w.Height, "height", 10, "height of the world map")
+	var addr string
+	var world World
+	flag.Uint64Var(&world.Seed, "seed", 0, "seed for initializing the procedural generation (0 for random)")
+	flag.UintVar(&world.Width, "width", 10, "width of the world map")
+	flag.UintVar(&world.Height, "height", 10, "height of the world map")
+	flag.StringVar(&addr, "addr", ":8765", "http server listen address")
 	flag.Func("log", "log level", func(v string) error {
-		return loggerLevel.UnmarshalText([]byte(v))
+		return logLevel.UnmarshalText([]byte(v))
 	})
 	flag.Parse()
-	slog.Info("world", "seed", w.Seed, "size", fmt.Sprintf("%dx%d", w.Width, w.Height))
+	slog.Info("world", "seed", world.Seed, "size", fmt.Sprintf("%dx%d", world.Width, world.Height))
 
-	if w.Seed == 0 {
-		w.Seed = rand.Uint64()
+	if world.Seed == 0 {
+		world.Seed = rand.Uint64()
 	}
+	world.Generate()
 
-	w.Generate()
+	slog.Info("starting server", "addr", addr)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/world", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(world)
+	})
+	srv := &http.Server{
+		Addr:     addr,
+		Handler:  mux,
+		ErrorLog: slog.NewLogLogger(logHandler, slog.LevelError),
+	}
+	srv.ListenAndServe()
 }
 
 type World struct {
