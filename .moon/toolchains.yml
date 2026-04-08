@@ -1,6 +1,22 @@
 
 
 go:
-  version: ^1.25.5
+  version: ^1.26.2
   tidyOnChange: true
   workspaces: false
+
+
+node:
+  version: ^v25
+  syncVersionManagerConfig: nodenv
+
+
+pnpm:
+  version: ^v10.28.0
+
+
+typescript:
+  includeProjectReferenceSources: true
+  includeSharedTypes: true
+  syncProjectReferences: true
+  syncProjectReferencesToPaths: true

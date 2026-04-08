@@ -1,5 +1,8 @@
-layer: application
+$schema: https://moonrepo.dev/schemas/project.json
+
 language: go
+stack: backend
+layer: application
 
 project:
   name: server

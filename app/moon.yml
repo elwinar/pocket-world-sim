@@ -1,0 +1,21 @@
+$schema: https://moonrepo.dev/schemas/project.json
+
+language: typescript
+stack: frontend
+layer: application
+
+project:
+  name: app
+  description: "world display client"
+
+tasks:
+  build:
+    command: "pnpm vite build"
+    deps:
+      - "~:typecheck"
+
+  typecheck:
+    command: "pnpm tsc"
+
+  serve:
+    command: "pnpm vite"
