@@ -1,0 +1,6 @@
+
+
+go:
+  version: ^1.25.5
+  tidyOnChange: true
+  workspaces: false

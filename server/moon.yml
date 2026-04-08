@@ -1,0 +1,23 @@
+layer: application
+language: go
+
+project:
+  name: server
+  description: "world simulation server"
+
+tasks:
+  build:
+    command: "go build -o @out(0)"
+    inputs:
+      - "**/*.go"
+      - "/go.mod"
+    outputs:
+      - "/bin/$project"
+    deps:
+      - "~:generate"
+  generate:
+    command: "go generate"
+    inputs:
+      - "**/*.go"
+      - "/go.mod"
+

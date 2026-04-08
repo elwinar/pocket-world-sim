@@ -1,0 +1,5 @@
+go = "1.26.2"
+buf = "1.67.0"
+moon = "2.1.4"
+[plugins.tools]
+buf = "https://raw.githubusercontent.com/stk0vrfl0w/proto-toml-plugins/main/plugins/buf.toml"
