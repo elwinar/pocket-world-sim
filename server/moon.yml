@@ -20,4 +20,9 @@ tasks:
     inputs:
       - "**/*.go"
       - "/go.mod"
-
+    outputs:
+      - "**/*_string.go"
+  lint:
+    command: "golangci-lint run"
+    inputs:
+      - "**/*.go"

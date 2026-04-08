@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -42,14 +43,23 @@ func main() {
 	slog.Info("starting server", "addr", addr)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/world", func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(world)
+		err := json.NewEncoder(w).Encode(world)
+		if err != nil {
+			slog.Error("writing response", "err", err)
+		}
 	})
 	srv := &http.Server{
 		Addr:     addr,
 		Handler:  mux,
 		ErrorLog: slog.NewLogLogger(logHandler, slog.LevelError),
 	}
-	srv.ListenAndServe()
+	err := srv.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		slog.Error("listening", "err", err)
+		os.Exit(1)
+	}
+
+	os.Exit(0)
 }
 
 type World struct {
