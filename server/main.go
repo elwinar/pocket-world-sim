@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/ojrac/opensimplex-go"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -48,9 +49,10 @@ func main() {
 			slog.Error("writing response", "err", err)
 		}
 	})
+	handler := cors.Default().Handler(mux)
 	srv := &http.Server{
 		Addr:     addr,
-		Handler:  mux,
+		Handler:  handler,
 		ErrorLog: slog.NewLogLogger(logHandler, slog.LevelError),
 	}
 	err := srv.ListenAndServe()
