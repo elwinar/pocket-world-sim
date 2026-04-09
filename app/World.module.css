@@ -1,0 +1,19 @@
+.container {
+  border: 1px solid gray;
+  display: inline-grid;
+  gap: 0;
+}
+
+.cell {
+  width: 32px;
+  height: 32px;
+  background: red;
+}
+
+.cell[data-biome="0"] {
+  background: lightgreen;
+}
+
+.cell[data-biome="1"] {
+  background: darkgreen;
+}

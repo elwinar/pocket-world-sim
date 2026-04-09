@@ -1,4 +1,5 @@
 import { type ChangeEvent, type SubmitEvent, useState } from "react";
+import { World } from "./World";
 
 export function Main() {
 	const [addr, setAddr] = useState<string>("http://localhost:8765");
@@ -11,7 +12,7 @@ export function Main() {
 
 	function handleFormSubmit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
-		fetchWorld(addr).then(setWorld);
+		fetchWorld(addr).then((w) => setWorld(w));
 		return false;
 	}
 
@@ -23,6 +24,7 @@ export function Main() {
 				<button type="submit">load</button>
 			</form>
 			<pre>{JSON.stringify(world)}</pre>
+			<World world={world} />
 		</>
 	);
 }
