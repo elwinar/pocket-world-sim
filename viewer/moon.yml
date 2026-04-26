@@ -5,8 +5,8 @@ stack: frontend
 layer: application
 
 project:
-  name: app
-  description: "world display client"
+  name: viewer
+  description: "world viewer"
 
 tasks:
   build:

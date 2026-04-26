@@ -3,7 +3,7 @@
 # or both values.
 projects:
 - server
-- app
+- viewer
 
 # Configures the version control system (VCS). Also known as
 # source code management (SCM).

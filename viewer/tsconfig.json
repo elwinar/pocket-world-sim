@@ -16,8 +16,11 @@
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* Path aliasing */
+    "paths": {
+      "~/*": ["./*"],
+    }
   },
-  "include": ["src"]
 }
