@@ -13,6 +13,11 @@
 			<input type="text" name="addr" value="http://localhost:8765" />
 			<button type="submit">load</button>
 		</form>
+    <dl id="nerdstats">
+      <dt>position</dt> <dd>(<span data-bind="x"></span>,<span data-bind="y"></span>)</dd>
+      <dt>tile</dt> <dd>(<span data-bind="tx"></span>,<span data-bind="ty"></span>)</dd>
+      <dt>moving</dt> <dd data-bind="moving"></dd>
+    </dl>
     <div id="view"></div>
     <script type="module" src="/index.ts"></script>
   </body>

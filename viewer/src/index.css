@@ -15,3 +15,6 @@ body > *:first-child {
   left: 0;
   z-index: -1;
 }
+
+#nerdstats {
+}

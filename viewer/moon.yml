@@ -12,10 +12,20 @@ tasks:
   build:
     command: "pnpm vite build"
     deps:
+      - "~:assetpack"
       - "~:typecheck"
 
   typecheck:
     command: "pnpm tsc"
 
+  assetpack:
+    command: "pnpm assetpack"
+    inputs:
+      - "assets/*"
+    outputs:
+      - "src/public/*"
+
   serve:
     command: "pnpm vite"
+    deps:
+      - "~:assetpack"

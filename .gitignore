@@ -1,19 +1,15 @@
 # Binaries
-bin/
-
-# Test binary, built with `go test -c`
-*.test
-
-# Code coverage profiles and other test artifacts
-*.out
-coverage.*
-*.coverprofile
-profile.cov
-
-# Go workspace file
-go.work
-go.work.sum
+/bin/
 
 # moon
-.moon/cache
-.moon/docker
+/.moon/cache
+/.moon/docker
+
+# Go workspace file
+/server/go.work
+/server/go.work.sum
+
+# node
+/viewer/node_modules
+/viewer/.assetpack
+/viewer/src/public
