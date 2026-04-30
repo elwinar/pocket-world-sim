@@ -9,12 +9,11 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[Plain-0]
-	_ = x[Weeds-1]
 }
 
-const _Biome_name = "PlainWeeds"
+const _Biome_name = "Plain"
 
-var _Biome_index = [...]uint8{0, 5, 10}
+var _Biome_index = [...]uint8{0, 5}
 
 func (i Biome) String() string {
 	idx := int(i) - 0

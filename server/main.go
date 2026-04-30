@@ -68,15 +68,35 @@ type World struct {
 	Seed          uint64
 	Width, Height uint
 
-	Grid []Tile
+	Grid  []Tile
+	Weeds map[uint]Weed
+}
+
+type Tile struct {
+	Biome Biome
+}
+
+type Weed struct {
+}
+
+//go:generate go tool stringer -type=Biome
+type Biome int
+
+const (
+	Plain Biome = iota
+)
+
+func PickBiome(z float64) Biome {
+	return Plain
 }
 
 func (w *World) Generate() {
 	rng := rand.New(rand.NewPCG(w.Seed, w.Seed))
-	gridSeed := rng.Int64()
+	noiseSeed := rng.Int64()
 
 	w.Grid = make([]Tile, w.Width*w.Height)
-	noise := opensimplex.NewNormalized(gridSeed)
+	w.Weeds = make(map[uint]Weed, w.Width*w.Height/100)
+	noise := opensimplex.NewNormalized(noiseSeed)
 	scale := 1.0
 	gain := 2.0
 	lacunarity := 0.5
@@ -86,8 +106,13 @@ func (w *World) Generate() {
 			nx := float64(x) * scale
 			ny := float64(y) * scale
 			z := FractalBrownianMotion(noise, nx, ny, octaves, gain, lacunarity)
-			w.Grid[w.index(x, y)] = Tile{
+			tile := Tile{
 				Biome: PickBiome(z),
+			}
+			idx := w.index(x, y)
+			w.Grid[idx] = tile
+			if rng.IntN(100) < 2 {
+				w.Weeds[idx] = Weed{}
 			}
 		}
 	}
@@ -96,25 +121,6 @@ func (w *World) Generate() {
 
 func (w *World) index(x, y uint) uint {
 	return y*w.Width + x
-}
-
-type Tile struct {
-	Biome Biome
-}
-
-//go:generate go tool stringer -type=Biome
-type Biome int
-
-const (
-	Plain Biome = iota
-	Weeds
-)
-
-func PickBiome(z float64) Biome {
-	if z < 0.5 {
-		return Plain
-	}
-	return Weeds
 }
 
 // Fractal Brownian Motion for 2D coordinates. https://thebookofshaders.com/13/.
