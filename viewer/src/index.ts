@@ -45,6 +45,7 @@ type World = {
 	Width: number;
 	Grid: Tile[];
 	Weeds: Record<number, Weed>;
+	Entities: Entity[];
 };
 
 type Tile = {
@@ -60,6 +61,17 @@ const biomeTilenames: Record<Biome, string> = {
 };
 
 type Weed = {};
+
+type Entity = {
+	ID: number;
+	Type: EntityType;
+	X: number;
+	Y: number;
+};
+
+enum EntityType {
+	Rattata = 0,
+}
 
 // bus is the main instance of TypedEventTarget used as decoupling method to
 // avoid entangling the rest of the code.
@@ -192,6 +204,12 @@ bus.on(WorldLoadedEvent.type, async (ev: WorldLoadedEvent) => {
 				tilemap.tile("weeds.png", tx, ty);
 			}
 		}
+	}
+
+	for (const entity of ev.world.Entities) {
+		const tx = entity.X * TileSize;
+		const ty = entity.Y * TileSize;
+		tilemap.tile("rattata.png", tx, ty);
 	}
 	viewport.addChild(tilemap);
 	viewport.moveCenter(0, 0);

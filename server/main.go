@@ -67,9 +67,11 @@ func main() {
 type World struct {
 	Seed          uint64
 	Width, Height uint
+	Size          uint
 
-	Grid  []Tile
-	Weeds map[uint]Weed
+	Grid     []Tile
+	Weeds    map[uint]Weed
+	Entities []Entity
 }
 
 type Tile struct {
@@ -78,6 +80,18 @@ type Tile struct {
 
 type Weed struct {
 }
+
+type Entity struct {
+	ID   uint
+	Type EntityType
+	X, Y uint
+}
+
+type EntityType int
+
+const (
+	Rattata EntityType = iota
+)
 
 //go:generate go tool stringer -type=Biome
 type Biome int
@@ -94,8 +108,13 @@ func (w *World) Generate() {
 	rng := rand.New(rand.NewPCG(w.Seed, w.Seed))
 	noiseSeed := rng.Int64()
 
-	w.Grid = make([]Tile, w.Width*w.Height)
-	w.Weeds = make(map[uint]Weed, w.Width*w.Height/100)
+	w.Size = w.Width * w.Height
+	w.Grid = make([]Tile, w.Size)
+
+	// Pre-initialize to 1% of the total map size to get a reasonable initial
+	// size and avoid too many re-allocations.
+	w.Weeds = make(map[uint]Weed, w.Size/100)
+
 	noise := opensimplex.NewNormalized(noiseSeed)
 	scale := 1.0
 	gain := 2.0
@@ -116,11 +135,28 @@ func (w *World) Generate() {
 			}
 		}
 	}
-	slog.Debug("grid", "v", w.Grid)
+
+	entitiesN := rng.UintN(w.Size / 1000)
+	w.Entities = make([]Entity, 0, entitiesN)
+	for i := range entitiesN {
+		idx := rng.UintN(w.Size)
+		x, y := w.position(idx)
+		w.Entities = append(w.Entities, Entity{
+			ID:   i,
+			Type: Rattata,
+			X:    x,
+			Y:    y,
+		})
+
+	}
 }
 
 func (w *World) index(x, y uint) uint {
 	return y*w.Width + x
+}
+
+func (w *World) position(idx uint) (uint, uint) {
+	return idx % w.Width, idx / w.Width
 }
 
 // Fractal Brownian Motion for 2D coordinates. https://thebookofshaders.com/13/.
