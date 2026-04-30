@@ -1,6 +1,10 @@
-import { CompositeTilemap } from "@pixi/tilemap";
-import { Application, Assets, FederatedPointerEvent } from "pixi.js";
+import { CompositeTilemap, settings } from "@pixi/tilemap";
+import { Application, Assets, type FederatedPointerEvent } from "pixi.js";
 import { Viewport } from "pixi-viewport";
+
+// use32bitIndex is necessary to render more than 2^16 tiles (16k, 128*128),
+// which is a bit small for what we're intending here.
+settings.use32bitIndex = true;
 
 // TypedEventTarget is a barebones event bus implementation with typing for
 // sanity.
