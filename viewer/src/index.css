@@ -5,8 +5,12 @@ body {
   overflow: hidden;
 }
 
-body > *:first-child {
-  margin-top: 0;
+#overlay {
+  width: fit-content;
+
+  & > * {
+    margin-top: 0;
+  }
 }
 
 #view {
